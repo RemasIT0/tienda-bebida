@@ -9,6 +9,23 @@ let products = [];
 let clients = [];
 let orders = [];
 
+// ===== FUNCIÓN TOAST (CARTELITO) =====
+function showToast(message) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('product-form').addEventListener('submit', async (e) => { e.preventDefault(); await saveProduct(); });
     document.getElementById('client-form').addEventListener('submit', async (e) => { e.preventDefault(); await saveClient(); });
@@ -96,8 +113,10 @@ async function saveProduct() {
         const productData = { name, price, stock, description, image: imageData || null, updatedAt: new Date().toISOString() };
         if (id) {
             await updateDoc(doc(db, 'products', id), productData);
+            showToast('✅ Producto actualizado');
         } else {
             await setDoc(doc(collection(db, 'products')), { ...productData, createdAt: new Date().toISOString() });
+            showToast('✅ Producto agregado');
         }
         closeModal('modal-product');
     };
@@ -115,6 +134,7 @@ async function saveProduct() {
 async function deleteProduct(id) {
     if (!confirm('¿Eliminar este producto?')) return;
     await deleteDoc(doc(db, 'products', id));
+    showToast('🗑️ Producto eliminado');
 }
 
 function handleImagePreview(e) {
@@ -182,8 +202,10 @@ async function saveClient() {
 
     if (id) {
         await updateDoc(doc(db, 'clients', id), clientData);
+        showToast('✅ Cliente actualizado');
     } else {
         await setDoc(doc(collection(db, 'clients')), clientData);
+        showToast('✅ Cliente agregado');
     }
     closeModal('modal-client');
 }
@@ -191,6 +213,7 @@ async function saveClient() {
 async function deleteClient(id) {
     if (!confirm('¿Eliminar este cliente?')) return;
     await deleteDoc(doc(db, 'clients', id));
+    showToast('🗑️ Cliente eliminado');
 }
 
 // --- PEDIDOS ---
@@ -239,10 +262,10 @@ async function acceptOrder(orderId) {
         }
     }
     await updateDoc(doc(db, 'orders', orderId), { status: 'accepted' });
-    alert('✅ Pedido aceptado. Stock actualizado.');
+    showToast('✅ Pedido aceptado');
 }
 
-// ️ AGREGAR ESTO AL FINAL PARA QUE FUNCIONEN LOS onclick
+// ⚠️ EXPOSICIÓN GLOBAL PARA onclick
 window.logout = logout;
 window.openProductForm = openProductForm;
 window.editProduct = editProduct;
@@ -252,11 +275,4 @@ window.editClient = editClient;
 window.deleteClient = deleteClient;
 window.acceptOrder = acceptOrder;
 window.closeModal = closeModal;
-
-// Limpiar secciones al cargar para evitar duplicados
-document.addEventListener('DOMContentLoaded', () => {
-    // Limpiar contenedores
-    document.getElementById('admin-products').innerHTML = '';
-    document.getElementById('admin-pending-orders').innerHTML = '';
-    document.getElementById('admin-clients').innerHTML = '';
-});
+window.showToast = showToast;
