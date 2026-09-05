@@ -84,7 +84,7 @@ function renderClientProducts() {
 async function loadCart() {
     try {
         const cartRef = doc(db, 'carts', currentUser.username);
-        const cartSnap = await getDoc(cartRef); // Ahora usa el getDoc importado arriba
+        const cartSnap = await getDoc(cartRef);
         if (cartSnap.exists()) {
             carts[currentUser.username] = cartSnap.data().items || [];
         } else {
@@ -216,42 +216,60 @@ async function sendWhatsApp() {
     openModal('modal-transfer');
 }
 
-// ===== CONFIRMAR TRANSFERENCIA Y ENVIAR =====
+// ===== CONFIRMAR TRANSFERENCIA, DESCONTAR STOCK Y ENVIAR =====
 async function confirmTransfer() {
     closeModal('modal-transfer');
     
     const cart = getCart();
     if (cart.length === 0) return;
 
-    const now = new Date();
-    const fecha = now.toLocaleDateString('es-AR');
-    const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    try {
+        // 1. DESCONTAR STOCK INMEDIATAMENTE
+        for (const item of cart) {
+            const product = products.find(p => String(p.id) === String(item.productId));
+            if (product) {
+                const newStock = Math.max(0, Number(product.stock) - Number(item.quantity));
+                await updateDoc(doc(db, 'products', product.id), { stock: newStock });
+            }
+        }
 
-    let msg = `*🛒 NUEVO PEDIDO*\n\n*Cliente:* ${currentUser.name}\n*Fecha:* ${fecha}\n*Hora:* ${hora}\n\n*Productos:*\n`;
-    cart.forEach(item => {
-        msg += `• ${item.name} x${item.quantity} — $${(item.price * item.quantity).toFixed(2)}\n`;
-    });
-    const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    msg += `\n*TOTAL: $${total.toFixed(2)}*\n\n`;
-    msg += `💳 *Pago por transferencia* - Adjunto comprobante`;
+        // 2. PREPARAR MENSAJE Y DATOS
+        const now = new Date();
+        const fecha = now.toLocaleDateString('es-AR');
+        const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
-    const order = {
-        clientUsername: currentUser.username,
-        clientName: currentUser.name,
-        items: cart.map(i => ({ ...i })),
-        total,
-        date: now.toISOString(),
-        status: 'pending',
-        paymentMethod: 'transferencia'
-    };
-    
-    await setDoc(doc(collection(db, 'orders')), order);
+        let msg = `*🛒 NUEVO PEDIDO*\n\n*Cliente:* ${currentUser.name}\n*Fecha:* ${fecha}\n*Hora:* ${hora}\n\n*Productos:*\n`;
+        cart.forEach(item => {
+            msg += `• ${item.name} x${item.quantity} — $${(item.price * item.quantity).toFixed(2)}\n`;
+        });
+        const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        msg += `\n*TOTAL: $${total.toFixed(2)}*\n\n`;
+        msg += `💳 *Pago por transferencia* - Adjunto comprobante (o efectivo)`;
 
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-    window.location.href = url;
+        const order = {
+            clientUsername: currentUser.username,
+            clientName: currentUser.name,
+            items: cart.map(i => ({ ...i })),
+            total,
+            date: now.toISOString(),
+            status: 'pending',
+            paymentMethod: 'transferencia'
+        };
+        
+        // 3. GUARDAR PEDIDO EN FIREBASE
+        await setDoc(doc(collection(db, 'orders')), order);
 
-    await saveCart([]);
-    showToast('✅ Pedido enviado');
+        // 4. ABRIR WHATSAPP Y LIMPIAR
+        const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+        window.location.href = url;
+
+        await saveCart([]);
+        showToast('✅ Pedido enviado y stock actualizado');
+
+    } catch (error) {
+        console.error('Error al procesar la compra:', error);
+        showToast('❌ Error al procesar la compra');
+    }
 }
 
 // ===== MIS PEDIDOS =====
@@ -283,7 +301,7 @@ function openMyOrders() {
     openModal('modal-orders');
 }
 
-// ⚠️ EXPOSICIÓN GLOBAL PARA onclick
+// ️ EXPOSICIÓN GLOBAL PARA onclick
 window.logout = logout;
 window.openCart = openCart;
 window.openMyOrders = openMyOrders;
