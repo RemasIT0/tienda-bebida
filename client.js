@@ -1,6 +1,6 @@
 import { db, collection, doc, getDocs, setDoc, updateDoc, onSnapshot, query, where } from './firebase-config.js';
 
-const WHATSAPP_NUMBER = '5493815420822'; // ⚠️ Cambiar por tu número real
+const WHATSAPP_NUMBER = '5493815420822'; // ⚠️ Tu número real
 
 const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 if (!currentUser || currentUser.type !== 'client') {
@@ -204,49 +204,21 @@ async function cancelPurchase() {
     if (!confirm('¿Seguro que querés cancelar la compra? Se vaciará el carrito.')) return;
     await saveCart([]);
     closeModal('modal-cart');
-    showToast('️ Compra cancelada');
+    showToast('Compra cancelada');
 }
 
+// ===== ENVIAR WHATSAPP (MUESTRA MODAL DE TRANSFERENCIA) =====
 async function sendWhatsApp() {
     const cart = getCart();
     if (cart.length === 0) {
         showToast('⚠️ Carrito vacío');
         return;
     }
-
-    // En lugar de enviar directo, mostrar el modal de transferencia
+    // Abrir el modal de transferencia en lugar de enviar directo
     openModal('modal-transfer');
 }
-    const now = new Date();
-    const fecha = now.toLocaleDateString('es-AR');
-    const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
-    let msg = `*🛒 NUEVO PEDIDO*\n\n*Cliente:* ${currentUser.name}\n*Fecha:* ${fecha}\n*Hora:* ${hora}\n\n*Productos:*\n`;
-    cart.forEach(item => {
-        msg += `• ${item.name} x${item.quantity} — $${(item.price * item.quantity).toFixed(2)}\n`;
-    });
-    const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    msg += `\n*TOTAL: $${total.toFixed(2)}*`;
-
-    const order = {
-        clientUsername: currentUser.username,
-        clientName: currentUser.name,
-        items: cart.map(i => ({ ...i })),
-        total,
-        date: now.toISOString(),
-        status: 'pending'
-    };
-    
-    await setDoc(doc(collection(db, 'orders')), order);
-
-    // ⚠️ CAMBIO CLAVE: usar window.location.href para abrir directo la app
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-    window.location.href = url;
-
-    await saveCart([]);
-    closeModal('modal-cart');
-    showToast('✅ Pedido enviado');
-}
+// ===== CONFIRMAR TRANSFERENCIA Y ENVIAR =====
 async function confirmTransfer() {
     closeModal('modal-transfer');
     
@@ -284,8 +256,7 @@ async function confirmTransfer() {
     showToast('✅ Pedido enviado');
 }
 
-// Exponer al window
-window.confirmTransfer = confirmTransfer;
+// ===== MIS PEDIDOS =====
 function openMyOrders() {
     const container = document.getElementById('my-orders-list');
     const myOrders = orders.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -323,6 +294,6 @@ window.changeQty = changeQty;
 window.removeFromCart = removeFromCart;
 window.cancelPurchase = cancelPurchase;
 window.sendWhatsApp = sendWhatsApp;
+window.confirmTransfer = confirmTransfer;
 window.closeModal = closeModal;
 window.showToast = showToast;
-window.confirmTransfer = confirmTransfer;
