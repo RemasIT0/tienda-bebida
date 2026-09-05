@@ -48,7 +48,7 @@ function renderClientProducts() {
     }
     container.innerHTML = products.map(p => `
         <div class="product-card">
-            ${p.image ? `<img src="${p.image}" alt="${p.name}" class="product-img">` : `<div class="product-img no-img">📦</div>`}
+            ${p.image ? `<img src="${p.image}" alt="${p.name}" class="product-img">` : `<div class="product-img no-img"></div>`}
             <div class="product-info">
                 <h3>${p.name}</h3>
                 <p class="product-desc">${p.description || ''}</p>
@@ -66,19 +66,7 @@ function renderClientProducts() {
 
 async function loadCart() {
     try {
-        const cartDoc = await getDocs(doc(db, 'carts', currentUser.username)); // Nota: getDocs no funciona así con doc, usamos una consulta o manejamos el error
-        // Corrección para obtener un solo documento:
-        // En Firebase v10, para get de un doc usamos getDoc, pero como lo importamos, lo usamos bien:
-    } catch(e) {
-        carts[currentUser.username] = [];
-    }
-}
-
-// Corrección de loadCart para que funcione perfecto:
-async function loadCart() {
-    try {
         const cartRef = doc(db, 'carts', currentUser.username);
-        // Necesitamos importar getDoc, ya está en firebase-config.js
         const { getDoc } = await import('./firebase-config.js');
         const cartSnap = await getDoc(cartRef);
         if (cartSnap.exists()) {
@@ -265,3 +253,14 @@ function openMyOrders() {
     }
     openModal('modal-orders');
 }
+
+// ⚠️ AGREGAR ESTO AL FINAL PARA QUE FUNCIONEN LOS onclick
+window.logout = logout;
+window.openCart = openCart;
+window.openMyOrders = openMyOrders;
+window.addToCart = addToCart;
+window.changeQty = changeQty;
+window.removeFromCart = removeFromCart;
+window.cancelPurchase = cancelPurchase;
+window.sendWhatsApp = sendWhatsApp;
+window.closeModal = closeModal;
