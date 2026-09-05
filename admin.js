@@ -250,34 +250,40 @@ function renderPendingOrders() {
     `).join('');
 }
 
-// ===== FUNCIÓN CORREGIDA PARA DESCONTAR STOCK =====
+// ===== FUNCIÓN CON DEBUG PARA VER POR QUÉ NO BAJA EL STOCK =====
 async function acceptOrder(orderId) {
     if (!confirm('¿Aceptar este pedido? Se descontará el stock.')) return;
 
     const order = orders.find(o => o.id === orderId);
-    if (!order) {
-        showToast('❌ Pedido no encontrado');
-        return;
-    }
+    console.log(" Orden a aceptar:", order);
 
     try {
         // 1. Leer productos frescos directamente de Firestore
         const productsSnapshot = await getDocs(collection(db, 'products'));
         const freshProducts = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        console.log("️ Productos en la base de datos:", freshProducts.map(p => ({ id: p.id, name: p.name, stock: p.stock })));
 
         // 2. Descontar stock de cada producto
         for (const item of order.items) {
-            // Usamos String() para asegurar que coincidan aunque uno sea número y otro texto
+            console.log(`🔍 Buscando producto del pedido: ID="${item.productId}", Nombre="${item.name}"`);
+            
+            // Usamos String() para asegurar que coincidan
             const product = freshProducts.find(p => String(p.id) === String(item.productId));
             
             if (product) {
+                console.log(`✅ Producto encontrado: ${product.name}. Stock actual: ${product.stock}`);
+                
                 const currentStock = Number(product.stock) || 0;
                 const qtyToSubtract = Number(item.quantity) || 0;
                 const newStock = Math.max(0, currentStock - qtyToSubtract);
                 
+                console.log(` Actualizando stock de ${product.name} de ${currentStock} a ${newStock}`);
+                
                 await updateDoc(doc(db, 'products', product.id), { stock: newStock });
+                console.log(`✨ Stock actualizado en Firebase para ${product.name}`);
             } else {
-                console.warn(`⚠️ No se encontró el producto con ID: ${item.productId}`);
+                console.error(`❌ NO SE ENCONTRÓ EL PRODUCTO. ID buscado: ${item.productId}. IDs disponibles: ${freshProducts.map(p => p.id).join(', ')}`);
             }
         }
 
@@ -286,8 +292,8 @@ async function acceptOrder(orderId) {
         showToast('✅ Pedido aceptado y stock actualizado');
         
     } catch (error) {
-        console.error('❌ Error al aceptar pedido:', error);
-        showToast('❌ Error al actualizar el stock');
+        console.error('❌ Error grave al aceptar pedido:', error);
+        showToast('❌ Error al actualizar el stock (mirá la consola)');
     }
 }
 
