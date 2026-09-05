@@ -866,3 +866,70 @@ main {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+/* ===== MODAL TRANSFERENCIA ===== */
+.transfer-content {
+    padding: 20px;
+}
+
+.transfer-text {
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.transfer-data {
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.transfer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.transfer-row:last-child {
+    border-bottom: none;
+}
+
+.transfer-label {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.transfer-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.transfer-value.alias {
+    color: var(--accent-blue-light);
+    font-family: monospace;
+    font-size: 15px;
+}
+
+.transfer-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid var(--warning);
+    color: var(--warning);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.transfer-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.transfer-buttons button {
+    flex: 1;
+}
