@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda de Bebidas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <header class="client-header">
+        <div class="header-content">
+            <h1>🍹 Tienda de Bebidas</h1>
+            <div class="header-actions">
+                <button class="btn-orders" onclick="openMyOrders()">Mis pedidos</button>
+                <button class="btn-cart" onclick="openCart()">
+                    🛒 Carrito (<span id="cart-count">0</span>)
+                </button>
+                <button class="btn-logout" onclick="logout()">Salir</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="client-main">
+        <section class="card">
+            <h2>Productos disponibles</h2>
+            <div id="client-products" class="product-grid">
+                <!-- Se llena con JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Carrito -->
+    <div id="modal-cart" class="modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>🛒 Mi Carrito</h2>
+                <button class="btn-close" onclick="closeModal('modal-cart')">&times;</button>
+            </div>
+            <div id="cart-items" class="cart-list">
+                <!-- Se llena con JS -->
+            </div>
+            <div class="cart-footer">
+                <p class="cart-total">Total: $<span id="cart-total">0.00</span></p>
+                <div class="cart-buttons">
+                    <button class="btn-danger" onclick="cancelPurchase()">Cancelar compra</button>
+                    <button class="btn-whatsapp" onclick="sendWhatsApp()">Enviar por WhatsApp</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Mis Pedidos -->
+    <div id="modal-orders" class="modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Mis Pedidos</h2>
+                <button class="btn-close" onclick="closeModal('modal-orders')">&times;</button>
+            </div>
+            <div id="my-orders-list" class="orders-list">
+                <!-- Se llena con JS -->
+            </div>
+        </div>
+    </div>
+
+<script type="module" src="client.js"></script></body>
+</html>
