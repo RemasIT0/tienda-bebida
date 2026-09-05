@@ -1,4 +1,4 @@
-import { db, collection, doc, getDocs, setDoc, updateDoc, onSnapshot, query, where } from './firebase-config.js';
+import { db, collection, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, where } from './firebase-config.js';
 
 const WHATSAPP_NUMBER = '5493815420822'; // ⚠️ Tu número real
 
@@ -84,8 +84,7 @@ function renderClientProducts() {
 async function loadCart() {
     try {
         const cartRef = doc(db, 'carts', currentUser.username);
-        const { getDoc } = await import('./firebase-config.js');
-        const cartSnap = await getDoc(cartRef);
+        const cartSnap = await getDoc(cartRef); // Ahora usa el getDoc importado arriba
         if (cartSnap.exists()) {
             carts[currentUser.username] = cartSnap.data().items || [];
         } else {
@@ -214,7 +213,6 @@ async function sendWhatsApp() {
         showToast('⚠️ Carrito vacío');
         return;
     }
-    // Abrir el modal de transferencia en lugar de enviar directo
     openModal('modal-transfer');
 }
 
