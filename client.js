@@ -1,6 +1,6 @@
 import { db, collection, doc, getDocs, setDoc, updateDoc, onSnapshot, query, where } from './firebase-config.js';
 
-const WHATSAPP_NUMBER = '5491112345678'; // ⚠️ Cambiar por tu número real
+const WHATSAPP_NUMBER = '5493815420822'; // ⚠️ Cambiar por tu número real
 
 const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 if (!currentUser || currentUser.type !== 'client') {
