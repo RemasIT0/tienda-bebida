@@ -214,6 +214,9 @@ async function sendWhatsApp() {
         return;
     }
 
+    // En lugar de enviar directo, mostrar el modal de transferencia
+    openModal('modal-transfer');
+}
     const now = new Date();
     const fecha = now.toLocaleDateString('es-AR');
     const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
@@ -244,7 +247,45 @@ async function sendWhatsApp() {
     closeModal('modal-cart');
     showToast('✅ Pedido enviado');
 }
+async function confirmTransfer() {
+    closeModal('modal-transfer');
+    
+    const cart = getCart();
+    if (cart.length === 0) return;
 
+    const now = new Date();
+    const fecha = now.toLocaleDateString('es-AR');
+    const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+    let msg = `*🛒 NUEVO PEDIDO*\n\n*Cliente:* ${currentUser.name}\n*Fecha:* ${fecha}\n*Hora:* ${hora}\n\n*Productos:*\n`;
+    cart.forEach(item => {
+        msg += `• ${item.name} x${item.quantity} — $${(item.price * item.quantity).toFixed(2)}\n`;
+    });
+    const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    msg += `\n*TOTAL: $${total.toFixed(2)}*\n\n`;
+    msg += `💳 *Pago por transferencia* - Adjunto comprobante`;
+
+    const order = {
+        clientUsername: currentUser.username,
+        clientName: currentUser.name,
+        items: cart.map(i => ({ ...i })),
+        total,
+        date: now.toISOString(),
+        status: 'pending',
+        paymentMethod: 'transferencia'
+    };
+    
+    await setDoc(doc(collection(db, 'orders')), order);
+
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+    window.location.href = url;
+
+    await saveCart([]);
+    showToast('✅ Pedido enviado');
+}
+
+// Exponer al window
+window.confirmTransfer = confirmTransfer;
 function openMyOrders() {
     const container = document.getElementById('my-orders-list');
     const myOrders = orders.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -284,3 +325,4 @@ window.cancelPurchase = cancelPurchase;
 window.sendWhatsApp = sendWhatsApp;
 window.closeModal = closeModal;
 window.showToast = showToast;
+window.confirmTransfer = confirmTransfer;
