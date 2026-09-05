@@ -242,7 +242,7 @@ async function acceptOrder(orderId) {
     alert('✅ Pedido aceptado. Stock actualizado.');
 }
 
-// ⚠️ AGREGAR ESTO AL FINAL PARA QUE FUNCIONEN LOS onclick
+// ️ AGREGAR ESTO AL FINAL PARA QUE FUNCIONEN LOS onclick
 window.logout = logout;
 window.openProductForm = openProductForm;
 window.editProduct = editProduct;
@@ -252,3 +252,11 @@ window.editClient = editClient;
 window.deleteClient = deleteClient;
 window.acceptOrder = acceptOrder;
 window.closeModal = closeModal;
+
+// Limpiar secciones al cargar para evitar duplicados
+document.addEventListener('DOMContentLoaded', () => {
+    // Limpiar contenedores
+    document.getElementById('admin-products').innerHTML = '';
+    document.getElementById('admin-pending-orders').innerHTML = '';
+    document.getElementById('admin-clients').innerHTML = '';
+});
