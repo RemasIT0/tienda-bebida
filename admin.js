@@ -245,55 +245,22 @@ function renderPendingOrders() {
                 ${o.items.map(i => `<div class="order-item-row"><span>${i.name} x${i.quantity}</span><span>$${(i.price * i.quantity).toFixed(2)}</span></div>`).join('')}
             </div>
             <div class="order-total">Total: $${o.total.toFixed(2)}</div>
-            <button class="btn-accept" onclick="acceptOrder('${o.id}')">✓ Aceptar pedido</button>
+            <button class="btn-accept" onclick="acceptOrder('${o.id}')">✓ Marcar como aceptado</button>
         </div>
     `).join('');
 }
 
-// ===== FUNCIÓN CON DEBUG PARA VER POR QUÉ NO BAJA EL STOCK =====
+// ===== FUNCIÓN SIMPLIFICADA: SOLO CAMBIA EL ESTADO =====
 async function acceptOrder(orderId) {
-    if (!confirm('¿Aceptar este pedido? Se descontará el stock.')) return;
-
-    const order = orders.find(o => o.id === orderId);
-    console.log(" Orden a aceptar:", order);
+    if (!confirm('¿Marcar este pedido como aceptado/entregado?')) return;
 
     try {
-        // 1. Leer productos frescos directamente de Firestore
-        const productsSnapshot = await getDocs(collection(db, 'products'));
-        const freshProducts = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        console.log("️ Productos en la base de datos:", freshProducts.map(p => ({ id: p.id, name: p.name, stock: p.stock })));
-
-        // 2. Descontar stock de cada producto
-        for (const item of order.items) {
-            console.log(`🔍 Buscando producto del pedido: ID="${item.productId}", Nombre="${item.name}"`);
-            
-            // Usamos String() para asegurar que coincidan
-            const product = freshProducts.find(p => String(p.id) === String(item.productId));
-            
-            if (product) {
-                console.log(`✅ Producto encontrado: ${product.name}. Stock actual: ${product.stock}`);
-                
-                const currentStock = Number(product.stock) || 0;
-                const qtyToSubtract = Number(item.quantity) || 0;
-                const newStock = Math.max(0, currentStock - qtyToSubtract);
-                
-                console.log(` Actualizando stock de ${product.name} de ${currentStock} a ${newStock}`);
-                
-                await updateDoc(doc(db, 'products', product.id), { stock: newStock });
-                console.log(`✨ Stock actualizado en Firebase para ${product.name}`);
-            } else {
-                console.error(`❌ NO SE ENCONTRÓ EL PRODUCTO. ID buscado: ${item.productId}. IDs disponibles: ${freshProducts.map(p => p.id).join(', ')}`);
-            }
-        }
-
-        // 3. Marcar el pedido como aceptado
+        // Solo cambiamos el estado, el stock ya se descontó cuando el cliente hizo el pedido
         await updateDoc(doc(db, 'orders', orderId), { status: 'accepted' });
-        showToast('✅ Pedido aceptado y stock actualizado');
-        
+        showToast('✅ Pedido marcado como aceptado');
     } catch (error) {
-        console.error('❌ Error grave al aceptar pedido:', error);
-        showToast('❌ Error al actualizar el stock (mirá la consola)');
+        console.error('Error al actualizar pedido:', error);
+        showToast('❌ Error al actualizar');
     }
 }
 
