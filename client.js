@@ -1,6 +1,6 @@
 import { db, collection, doc, getDocs, setDoc, updateDoc, onSnapshot, query, where } from './firebase-config.js';
 
-const WHATSAPP_NUMBER = '5493815420822'; // ⚠️ Cambiar por tu número real
+const WHATSAPP_NUMBER = '5491112345678'; // ⚠️ Cambiar por tu número real
 
 const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 if (!currentUser || currentUser.type !== 'client') {
@@ -10,6 +10,23 @@ if (!currentUser || currentUser.type !== 'client') {
 let products = [];
 let carts = {};
 let orders = [];
+
+// ===== FUNCIÓN TOAST (CARTELITO) =====
+function showToast(message) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     listenToProducts();
@@ -48,7 +65,7 @@ function renderClientProducts() {
     }
     container.innerHTML = products.map(p => `
         <div class="product-card">
-            ${p.image ? `<img src="${p.image}" alt="${p.name}" class="product-img">` : `<div class="product-img no-img"></div>`}
+            ${p.image ? `<img src="${p.image}" alt="${p.name}" class="product-img">` : `<div class="product-img no-img">📦</div>`}
             <div class="product-info">
                 <h3>${p.name}</h3>
                 <p class="product-desc">${p.description || ''}</p>
@@ -99,7 +116,7 @@ async function saveCart(cart) {
 async function addToCart(productId) {
     const product = products.find(p => p.id === productId);
     if (!product || product.stock === 0) {
-        alert('Este producto ya no está disponible');
+        showToast('❌ Producto no disponible');
         return;
     }
 
@@ -108,7 +125,7 @@ async function addToCart(productId) {
 
     if (existing) {
         if (existing.quantity >= product.stock) {
-            alert('No hay más stock disponible de este producto');
+            showToast('⚠️ Sin más stock');
             return;
         }
         existing.quantity++;
@@ -117,7 +134,7 @@ async function addToCart(productId) {
     }
 
     await saveCart(cart);
-    alert(`✅ ${product.name} añadido al carrito`);
+    showToast('✅ Añadido al carrito');
 }
 
 function updateCartCount() {
@@ -170,7 +187,7 @@ async function changeQty(productId, delta) {
         return;
     }
     if (product && item.quantity > product.stock) {
-        alert('No hay más stock disponible');
+        showToast('⚠️ Sin más stock');
         item.quantity = product.stock;
     }
     await saveCart(cart);
@@ -187,12 +204,13 @@ async function cancelPurchase() {
     if (!confirm('¿Seguro que querés cancelar la compra? Se vaciará el carrito.')) return;
     await saveCart([]);
     closeModal('modal-cart');
+    showToast('️ Compra cancelada');
 }
 
 async function sendWhatsApp() {
     const cart = getCart();
     if (cart.length === 0) {
-        alert('El carrito está vacío');
+        showToast('⚠️ Carrito vacío');
         return;
     }
 
@@ -218,12 +236,13 @@ async function sendWhatsApp() {
     
     await setDoc(doc(collection(db, 'orders')), order);
 
+    // ⚠️ CAMBIO CLAVE: usar window.location.href para abrir directo la app
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank');
+    window.location.href = url;
 
     await saveCart([]);
     closeModal('modal-cart');
-    alert('✅ Pedido enviado por WhatsApp. Esperá la confirmación del administrador.');
+    showToast('✅ Pedido enviado');
 }
 
 function openMyOrders() {
@@ -254,7 +273,7 @@ function openMyOrders() {
     openModal('modal-orders');
 }
 
-// ⚠️ AGREGAR ESTO AL FINAL PARA QUE FUNCIONEN LOS onclick
+// ⚠️ EXPOSICIÓN GLOBAL PARA onclick
 window.logout = logout;
 window.openCart = openCart;
 window.openMyOrders = openMyOrders;
@@ -264,3 +283,4 @@ window.removeFromCart = removeFromCart;
 window.cancelPurchase = cancelPurchase;
 window.sendWhatsApp = sendWhatsApp;
 window.closeModal = closeModal;
+window.showToast = showToast;
