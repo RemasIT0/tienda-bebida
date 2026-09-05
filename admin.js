@@ -250,26 +250,45 @@ function renderPendingOrders() {
     `).join('');
 }
 
+// ===== FUNCIÓN CORREGIDA PARA DESCONTAR STOCK =====
 async function acceptOrder(orderId) {
     if (!confirm('¿Aceptar este pedido? Se descontará el stock.')) return;
-    
+
     const order = orders.find(o => o.id === orderId);
-    if (!order) return;
-
-    // Leer productos frescos de Firestore para evitar errores
-    const productsSnapshot = await getDocs(collection(db, 'products'));
-    const freshProducts = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-    for (const item of order.items) {
-        const product = freshProducts.find(p => p.id === item.productId);
-        if (product) {
-            const newStock = Math.max(0, product.stock - item.quantity);
-            await updateDoc(doc(db, 'products', product.id), { stock: newStock });
-        }
+    if (!order) {
+        showToast('❌ Pedido no encontrado');
+        return;
     }
-    
-    await updateDoc(doc(db, 'orders', orderId), { status: 'accepted' });
-    showToast('✅ Pedido aceptado y stock actualizado');
+
+    try {
+        // 1. Leer productos frescos directamente de Firestore
+        const productsSnapshot = await getDocs(collection(db, 'products'));
+        const freshProducts = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // 2. Descontar stock de cada producto
+        for (const item of order.items) {
+            // Usamos String() para asegurar que coincidan aunque uno sea número y otro texto
+            const product = freshProducts.find(p => String(p.id) === String(item.productId));
+            
+            if (product) {
+                const currentStock = Number(product.stock) || 0;
+                const qtyToSubtract = Number(item.quantity) || 0;
+                const newStock = Math.max(0, currentStock - qtyToSubtract);
+                
+                await updateDoc(doc(db, 'products', product.id), { stock: newStock });
+            } else {
+                console.warn(`⚠️ No se encontró el producto con ID: ${item.productId}`);
+            }
+        }
+
+        // 3. Marcar el pedido como aceptado
+        await updateDoc(doc(db, 'orders', orderId), { status: 'accepted' });
+        showToast('✅ Pedido aceptado y stock actualizado');
+        
+    } catch (error) {
+        console.error('❌ Error al aceptar pedido:', error);
+        showToast('❌ Error al actualizar el stock');
+    }
 }
 
 // ⚠️ EXPOSICIÓN GLOBAL PARA onclick
