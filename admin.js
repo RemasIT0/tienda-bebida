@@ -251,18 +251,25 @@ function renderPendingOrders() {
 }
 
 async function acceptOrder(orderId) {
+    if (!confirm('¿Aceptar este pedido? Se descontará el stock.')) return;
+    
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
+    // Leer productos frescos de Firestore para evitar errores
+    const productsSnapshot = await getDocs(collection(db, 'products'));
+    const freshProducts = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
     for (const item of order.items) {
-        const product = products.find(p => p.id === item.productId);
+        const product = freshProducts.find(p => p.id === item.productId);
         if (product) {
             const newStock = Math.max(0, product.stock - item.quantity);
             await updateDoc(doc(db, 'products', product.id), { stock: newStock });
         }
     }
+    
     await updateDoc(doc(db, 'orders', orderId), { status: 'accepted' });
-    showToast('✅ Pedido aceptado');
+    showToast('✅ Pedido aceptado y stock actualizado');
 }
 
 // ⚠️ EXPOSICIÓN GLOBAL PARA onclick
