@@ -241,3 +241,14 @@ async function acceptOrder(orderId) {
     await updateDoc(doc(db, 'orders', orderId), { status: 'accepted' });
     alert('✅ Pedido aceptado. Stock actualizado.');
 }
+
+// ⚠️ AGREGAR ESTO AL FINAL PARA QUE FUNCIONEN LOS onclick
+window.logout = logout;
+window.openProductForm = openProductForm;
+window.editProduct = editProduct;
+window.deleteProduct = deleteProduct;
+window.openClientForm = openClientForm;
+window.editClient = editClient;
+window.deleteClient = deleteClient;
+window.acceptOrder = acceptOrder;
+window.closeModal = closeModal;
