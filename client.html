@@ -61,6 +61,41 @@
             </div>
         </div>
     </div>
+<!-- Modal: Datos de Transferencia -->
+<div id="modal-transfer" class="modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>💳 Datos para transferir</h2>
+            <button class="btn-close" onclick="closeModal('modal-transfer')">&times;</button>
+        </div>
+        <div class="transfer-content">
+            <p class="transfer-text">Para confirmar tu pedido, realizá la transferencia a:</p>
+            
+            <div class="transfer-data">
+                <div class="transfer-row">
+                    <span class="transfer-label">Titular:</span>
+                    <span class="transfer-value">TU NOMBRE COMPLETO</span>
+                </div>
+                <div class="transfer-row">
+                    <span class="transfer-label">Alias:</span>
+                    <span class="transfer-value alias">tu.alias.mp</span>
+                </div>
+                <div class="transfer-row">
+                    <span class="transfer-label">CBU:</span>
+                    <span class="transfer-value">0000000000000000000000</span>
+                </div>
+            </div>
 
+            <div class="transfer-warning">
+                ️ Una vez realizada la transferencia, enviá el <strong>comprobante</strong> al WhatsApp para confirmar tu pedido.
+            </div>
+
+            <div class="transfer-buttons">
+                <button class="btn-danger" onclick="closeModal('modal-transfer')">Cancelar</button>
+                <button class="btn-whatsapp" onclick="confirmTransfer()">✅ Ya transferí, enviar pedido</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script type="module" src="client.js?v=2"></script></body>
 </html>
